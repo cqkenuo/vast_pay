@@ -2,103 +2,200 @@
 
 namespace common\models;
 
-class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
+use Faker\Provider\Uuid;
+use Yii;
+use yii\base\NotSupportedException;
+use yii\db\ActiveRecord;
+use yii\web\IdentityInterface;
+use yii\behaviors\TimestampBehavior;
+
+/**
+ * This is the model class for table "{{%user}}".
+ *
+ * @property int $id
+ * @property string $username
+ * @property string $auth_key
+ * @property string $password_hash
+ * @property string|null $password_reset_token
+ * @property string $email
+ * @property string $account
+ * @property string $pay_md5_key
+ * @property int $money 现金,单位:分
+ * @property int $status
+ * @property int $pre_login_at
+ * @property int $created_at
+ * @property int $updated_at
+ */
+class User extends ActiveRecord implements IdentityInterface
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
 
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
+    const STATUS_INACTIVE = 0;
+    const STATUS_REGISTER_AUDIT = 1;
+    const STATUS_ACTIVE = 10;
 
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function findIdentity($id)
+    public static function tableName()
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return '{{%user}}';
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function findIdentityByAccessToken($token, $type = null)
+    public function rules()
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return [
+            [['username'], 'required'],
+            [['money', 'status', 'created_at', 'updated_at'], 'integer'],
+            [['username', 'auth_key'], 'string', 'max' => 32],
+            [['password_hash', 'password_reset_token', 'email'], 'string', 'max' => 256],
+        ];
     }
 
-    /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
-     */
-    public static function findByUsername($username)
+    public function attributeLabels()
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return [
+            'id'            =>  'ID',
+            'username'      =>  '用户名',
+            'email'         =>  '邮箱',
+            'money'         =>  '余额',
+            'status'        =>  '状态',
+            'account'       =>  '交易账号',
+            'pay_md5_key'   =>  '支付md5秘钥',
+            'pre_login_at'  =>  '上次登录时间',
+            'created_at'    =>  '创建时间',
+            'updated_at'    =>  '修改时间',
+        ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public function behaviors()
+    {
+        return [
+            TimestampBehavior::className(),
+        ];
+    }
+
     public function getId()
     {
-        return $this->id;
+        return $this->getPrimaryKey();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAuthKey()
     {
-        return $this->authKey;
+        return $this->auth_key;
+    }
+
+    public static function addMoney($id, $money, $type, $extra='')
+    {
+        return self::changeMoney($id, abs($money), $type, $extra);
+    }
+
+    public static function subMoney($id,  $money, $type, $extra='')
+    {
+        return self::changeMoney($id, -abs($money), $type, $extra);
+    }
+
+    protected static function changeMoney($id,  $money, $type, $extra)
+    {
+        //判断调用方法是否开启事务
+        $transaction = Yii::$app->db->getTransaction();
+
+        if ($transaction === null){
+            $transaction = Yii::$app->db->beginTransaction();
+        }
+
+        $oqUser = self::findOne($id);
+        if ($oqUser === null){
+            $transaction->rollBack();
+            return false;
+        }
+
+        $omChangeUserMoneyLog = new ChangeUserMoneyLog();
+        $omChangeUserMoneyLog->user_id = $id;
+        $omChangeUserMoneyLog->change_money = $money;
+        $omChangeUserMoneyLog->before_money = $oqUser->money;
+        $omChangeUserMoneyLog->after_money = $oqUser->money + $money;
+        $omChangeUserMoneyLog->type = $type;
+        $omChangeUserMoneyLog->extra = $extra;
+        if ($omChangeUserMoneyLog->save() === false){
+            $transaction->rollBack();
+            return false;
+        }
+        if ($transaction === null){
+            $transaction->commit();
+        }
+
+        return $oqUser->updateCounters(['money' => $money]);
+    }
+
+    public function generateAccount()
+    {
+        $prefix = Yii::$app->getSecurity()->generateRandomString(5);
+        $suffix = date('YmdHis') + self::find()->count() + 1;
+        return $prefix . $suffix;
+    }
+
+    public function generatePayMd5Key()
+    {
+        return md5( Yii::$app->getSecurity()->generateRandomString() );
+    }
+
+    public function generatePassword($password)
+    {
+        return Yii::$app->security->generatePasswordHash($password);
+    }
+
+    public function generateAuthKey()
+    {
+        return Yii::$app->security->generateRandomString();
     }
 
     /**
-     * {@inheritdoc}
+     * Generates new password reset token
      */
+    public function generatePasswordResetToken()
+    {
+        return Yii::$app->security->generateRandomString() . '_' . time();
+    }
+
+
+    public static function enumState($type = null, $field = null)
+    {
+        $lsEnum =  [
+            'status'=>[
+                self::STATUS_INACTIVE=>'封禁',
+                self::STATUS_ACTIVE=>'正常',
+                self::STATUS_REGISTER_AUDIT =>'注册审核中',
+            ],
+        ];
+
+        if (isset($lsEnum[$type])){
+            return $lsEnum[$type][$field] ? : $lsEnum[$type] ;
+        }
+
+        return $lsEnum;
+    }
+
     public function validateAuthKey($authKey)
     {
-        return $this->authKey === $authKey;
+        return $this->getAuthKey() === $authKey;
     }
 
-    /**
-     * Validates password
-     *
-     * @param string $password password to validate
-     * @return bool if password provided is valid for current user
-     */
     public function validatePassword($password)
     {
-        return $this->password === $password;
+        return Yii::$app->security->validatePassword($password, $this->password_hash);
     }
+
+    public static function findIdentity($id)
+    {
+        return static::findOne(['id' => $id, 'status' => self::STATUS_ACTIVE]);
+    }
+
+
+    public static function findIdentityByAccessToken($token, $type = null)
+    {
+        throw new NotSupportedException('"findIdentityByAccessToken" is not implemented.');
+    }
+
+    public static function findByUsername($username)
+    {
+        return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
+    }
+
 }

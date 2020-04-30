@@ -5,15 +5,13 @@ namespace backend\controllers;
 use Yii;
 use common\models\Product;
 use common\models\ProductSearch;
-use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-use yii\data\Pagination;
 
 /**
  * ProductController implements the CRUD actions for Product model.
  */
-class ProductController extends Controller
+class ProductController extends BaseController
 {
     /**
      * {@inheritdoc}
@@ -30,10 +28,6 @@ class ProductController extends Controller
         ];
     }
 
-    /**
-     * Lists all Product models.
-     * @return mixed
-     */
     public function actionIndex()
     {
         $osProduct = new ProductSearch();
@@ -47,12 +41,6 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Displays a single Product model.
-     * @param integer $id
-     * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionView($id)
     {
         return $this->render('view', [
@@ -60,11 +48,6 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Creates a new Product model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
-     */
     public function actionCreate()
     {
         $omProduct = new Product();
@@ -78,13 +61,7 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Updates an existing Product model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param integer $id
-     * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
-     */
+
     public function actionUpdate($id)
     {
         $oqProduct = $this->findModel($id);
@@ -98,13 +75,7 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Deletes an existing Product model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param integer $id
-     * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
-     */
+
     public function actionDelete($id)
     {
         $oqProduct = $this->findModel($id);
@@ -113,13 +84,27 @@ class ProductController extends Controller
         return $this->redirect(['index']);
     }
 
-    /**
-     * Finds the Product model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param integer $id
-     * @return Product the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
+    public function actionRecycleBin()
+    {
+        $osProduct = new ProductSearch();
+        $lsQueryParam = Yii::$app->request->queryParams;
+        $lsQueryParam['ProductSearch']['is_del'] = Product::DEL_STATE_YES;
+        $dataProvider = $osProduct->search($lsQueryParam);
+
+        return $this->render('recycle-bin', [
+            'searchModel' => $osProduct,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionRestore($id)
+    {
+        $oqProduct = $this->findModel($id);
+        $oqProduct->is_del = Product::DEL_STATE_NO;
+        $oqProduct->save();
+        return $this->redirect(['index']);
+    }
+
     protected function findModel($id)
     {
         if (($oqProduct = Product::findOne($id)) !== null) {

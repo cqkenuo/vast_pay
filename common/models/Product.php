@@ -70,7 +70,33 @@ class Product extends \yii\db\ActiveRecord
         ];
     }
 
-    static public function enumState($type = null, $field = null){
+    public function getIdToNameList($isDel = null)
+    {
+        $query = self::find();
+        $oqlProduct = $query->select(['id','name'])->andFilterWhere(['is_del'=> $isDel])->all();
+
+        $lsIdToName = [];
+        foreach ($oqlProduct as $k => $v){
+            $lsIdToName[$v->id] = $v->name;
+        }
+
+        return $lsIdToName;
+    }
+
+    public function getPayChannels($isDel = null, $status=null)
+    {
+        return $this->hasMany(PayChannel::className(), ['product_id' => 'id']);
+    }
+
+    public function getAllNormalProducts(){
+        return self::find()
+            ->andWhere(['is_del'=>Product::DEL_STATE_NO])
+            ->andWhere(['status'=>Product::STATUS_ON])
+            ->all();
+    }
+
+    public static function enumState($type = null, $field = null)
+    {
         $lsEnum =  [
             'status'=>[
                 self::STATUS_ON=>'开启',
@@ -85,15 +111,4 @@ class Product extends \yii\db\ActiveRecord
         return $lsEnum;
     }
 
-    public function getIdToNameList(){
-        $query = self::find();
-        $oqlProduct = $query->select(['id','name'])->andFilterWhere(['is_del'=> Product::DEL_STATE_NO])->all();
-
-        $lsIdToName = [];
-        foreach ($oqlProduct as $k => $v){
-            $lsIdToName[$v->id] = $v->name;
-        }
-
-        return $lsIdToName;
-    }
 }
