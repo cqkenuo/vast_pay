@@ -2,12 +2,13 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
-
+use common\helper\Helper;
+use common\models\User;
 /* @var $this yii\web\View */
 /* @var $model common\models\User */
 
 $this->title = $model->username;
-$this->params['breadcrumbs'][] = ['label' => Yii::t('app', '基本信息'), 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => Yii::t('app', '基本信息'), 'url' => ['/user/base-info']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
@@ -19,10 +20,20 @@ $this->params['breadcrumbs'][] = $this->title;
         'attributes' => [
             'username',
             'email:email',
-            'account',
-            'pay_md5_key',
-            'money',
-            'status',
+            [
+                'attribute'=>'money',
+                'value' => function($data) {
+                    return Helper::formatMoney($data->money);
+                },
+                'headerOptions' => ['width' => '80'],
+            ],
+            [
+                'attribute'=>'status',
+                'value' => function($data) {
+                    return User::enumState('status', $data->status);
+                },
+                'headerOptions' => ['width' => '80'],
+            ],
             [
                 'attribute' => 'pre_login_at',
                 'format' => ['date', 'php:Y-m-d H:i:s'],

@@ -4,15 +4,14 @@ namespace backend\controllers;
 
 use Yii;
 use common\models\ChangeUserMoneyLog;
-use common\models\ChangeUserMoneyLogSearch;
-use yii\web\Controller;
+use common\models\search\ChangeUserMoneyLogSearch;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
 /**
  * ChangeUserMoneyLogController implements the CRUD actions for ChangeUserMoneyLog model.
  */
-class ChangeUserMoneyLogController extends Controller
+class ChangeUserMoneyLogController extends BaseController
 {
 
     public function behaviors()
@@ -36,6 +35,18 @@ class ChangeUserMoneyLogController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+    /**
+     * 导出excel
+     */
+    public function actionExport()
+    {
+        $lsQueryParam = Yii::$app->request->queryParams;
+
+        header('Content-Type: application/vnd.ms-excel;');
+        $osChangeUserMoneyLog = new ChangeUserMoneyLogSearch();
+        $osChangeUserMoneyLog->export($lsQueryParam);
     }
 
     protected function findModel($id)

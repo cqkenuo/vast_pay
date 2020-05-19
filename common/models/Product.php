@@ -2,7 +2,6 @@
 
 namespace common\models;
 
-use Yii;
 use yii\behaviors\TimestampBehavior;
 
 /**
@@ -18,6 +17,8 @@ use yii\behaviors\TimestampBehavior;
 class Product extends \yii\db\ActiveRecord
 {
 
+    const TABLE_NAME = 'product';
+
     const STATUS_ON = 1;
     const STATUS_OFF = 0;
 
@@ -29,8 +30,9 @@ class Product extends \yii\db\ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%product}}';
+        return '{{%'. self::TABLE_NAME .'}}';
     }
+
 
     /**
      * {@inheritdoc}
@@ -105,7 +107,7 @@ class Product extends \yii\db\ActiveRecord
         ];
 
         if (isset($lsEnum[$type])){
-            return $lsEnum[$type][$field] ? : $lsEnum[$type] ;
+            return $lsEnum[$type][$field] ?? $lsEnum[$type] ;
         }
 
         return $lsEnum;

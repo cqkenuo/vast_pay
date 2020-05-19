@@ -21,8 +21,12 @@ use yii\behaviors\TimestampBehavior;
 class ChangeUserMoneyLog extends \yii\db\ActiveRecord
 {
 
-    const TYPE_PAY_ORDER_CORRECTION = 1;
-    const TYPE_PAY_ORDER_TURN_DOWN = 2;
+    const TYPE_PAY_ORDER_CORRECTION =   1;
+    const TYPE_PAY_ORDER_TURN_DOWN  =   2;
+    const TYPE_PAY_ORDER_SUCCESS    =   3;
+    const TYPE_DRAW_MONEY_WITHHOLD  =   4;
+    const TYPE_DRAW_MONEY_SUCCESS   =   5;
+    const TYPE_DRAW_MONEY_BACK      =   6;
 
     /**
      * {@inheritdoc}
@@ -39,7 +43,7 @@ class ChangeUserMoneyLog extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'change_money', 'before_money', 'after_money', 'type'], 'required'],
-            [['user_id', 'change_money', 'before_money', 'after_money'], 'integer'],
+            [['user_id', 'change_money', 'before_money', 'after_money'], 'number'],
         ];
     }
 
@@ -74,13 +78,17 @@ class ChangeUserMoneyLog extends \yii\db\ActiveRecord
     public static function enumState($type = null, $field = null){
         $lsEnum =  [
             'type'=>[
-                self::TYPE_PAY_ORDER_CORRECTION    => '支付订单校正',
-                self::TYPE_PAY_ORDER_TURN_DOWN      => '支付订单驳回',
+                self::TYPE_PAY_ORDER_CORRECTION => '支付订单校正',
+                self::TYPE_PAY_ORDER_TURN_DOWN  => '支付订单驳回',
+                self::TYPE_PAY_ORDER_SUCCESS    => '订单支付成功',
+                self::TYPE_DRAW_MONEY_WITHHOLD  => '申请提款预扣',
+                self::TYPE_DRAW_MONEY_SUCCESS  => '申请提款成功',
+                self::TYPE_DRAW_MONEY_BACK      => '申请提款退还',
             ],
         ];
 
         if (isset($lsEnum[$type])){
-            return $lsEnum[$type][$field] ? : $lsEnum[$type] ;
+            return $lsEnum[$type][$field] ?? $lsEnum[$type] ;
         }
 
         return $lsEnum;

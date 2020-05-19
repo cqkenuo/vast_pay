@@ -1,5 +1,5 @@
 <?php
-
+use yii\helpers\Url;
 use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;
 /* @var $this yii\web\View */
@@ -8,29 +8,43 @@ use yii\bootstrap\ActiveForm;
 $this->title = Yii::t('app', '修改登录密码: {name}', [
     'name' => $model->username,
 ]);
-$this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'Users'), 'url' => ['index']];
-$this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' => $model->id]];
-$this->params['breadcrumbs'][] = Yii::t('app', 'Update');
+$this->params['breadcrumbs'][] = Yii::t('app', '商户信息');
+$this->params['breadcrumbs'][] = Yii::t('app', '修改登录密码');
 ?>
 <div class="user-update">
 
     <h1><?= Html::encode($this->title) ?></h1>
+    <? if( $successHint === false ):?>
 
-    <div class="save-login-passwrd-form">
+        <div class="save-login-passwrd-form">
+            <?php $form = ActiveForm::begin(); ?>
+            <?php echo $form->errorSummary($formValidate); ?>
 
-        <?php $form = ActiveForm::begin(); ?>
+            <?= $form->field($formValidate, 'password')->passwordInput() ?>
 
-        <?= $form->field($formValidate, 'password')->textInput(['maxlength' => true]) ?>
-
-        <?= $form->field($formValidate, 'confirm_password')->textInput(['maxlength' => true]) ?>
+            <?= $form->field($formValidate, 'confirm_password')->passwordInput() ?>
 
 
-        <div class="form-group">
-            <?= Html::submitButton(Yii::t('app', '保存'), ['class' => 'btn btn-success']) ?>
+            <div class="form-group">
+                <?= Html::submitButton(Yii::t('app', '保存'), ['class' => 'btn btn-success']) ?>
+            </div>
+
+            <?php ActiveForm::end(); ?>
+
         </div>
-
-        <?php ActiveForm::end(); ?>
-
-    </div>
-
+    <? else: ?>
+        <div class="jumbotron" style="background: #f5f5f5">
+            <h2 style="color: #0f7b9f"><?= $successHint; ?></h2>
+            <p>
+            <div class=" text-center" >
+                <?=Html::beginForm(['/site/logout'], 'post');?>
+                <?=Html::submitButton('注销，重新登录',
+                ['class' => 'btn btn-lg btn-primary',
+                    'style'=> 'font-size: 16px']
+                );?>
+                <?=Html::endForm();?>
+            </div>
+            </p>
+        </div>
+    <? endif; ?>
 </div>

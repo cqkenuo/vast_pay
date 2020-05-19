@@ -8,7 +8,7 @@ use dmstr\widgets\Alert;
         <a href="" class="rfHeaderFont">
             <i class="glyphicon glyphicon-refresh"></i> 刷新
         </a>
-        <a href="javascript:history.go(-1)" class="rfHeaderFont">
+        <a href="<?=Yii::$app->request->referrer;?>" class="rfHeaderFont">
             <i class="fa fa-mail-reply"></i> 返回
         </a>
 <!--        --><?php //if (isset($this->blocks['content-header'])) { ?>
@@ -45,8 +45,10 @@ use dmstr\widgets\Alert;
     <div class="pull-right hidden-xs">
         <b>Version</b> 2.0
     </div>
-    <strong>Copyright &copy; 2014-2015 <a href="http://almsaeedstudio.com">Almsaeed Studio</a>.</strong> All rights
+    <strong>Copyright &copy;<?= date('Y') ?>  <a href="http://github.com/lgbya">Lgbya</a>.</strong> All rights
     reserved.
+    <strong><?= Yii::$app->name ?></strong> is a <strong> php </strong>code. For learning only, no business activities
+
 </footer>
 
 <!-- Control Sidebar -->

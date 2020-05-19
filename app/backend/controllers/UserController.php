@@ -4,20 +4,17 @@ namespace backend\controllers;
 
 use common\models\Product;
 use common\models\UserToPayChannel;
-use phpDocumentor\Reflection\DocBlock\Tags\Var_;
+use common\models\search\UserToPayChannelSearch;
 use Yii;
 use common\models\User;
-use common\models\UserSearch;
-use yii\data\ActiveDataProvider;
-use yii\helpers\ArrayHelper;
-use yii\web\Controller;
+use common\models\search\UserSearch;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
 /**
  * UserController implements the CRUD actions for User model.
  */
-class UserController extends Controller
+class UserController extends BaseController
 {
 
     public function behaviors()
@@ -45,7 +42,10 @@ class UserController extends Controller
 
     public function actionView($id)
     {
-        $dataProvider = new ActiveDataProvider(['query' => UserToPayChannel::find()]);
+        $osUserToPayChannel = new UserToPayChannelSearch();
+        $lsPost = Yii::$app->request->queryParams;
+        $lsPost['UserToPayChannelSearch']['user_id'] = $id;
+        $dataProvider = $osUserToPayChannel->search($lsPost);
         return $this->render('view', [
             'model' => $this->findModel($id),
             'dataProvider' => $dataProvider,
@@ -124,14 +124,27 @@ class UserController extends Controller
             }
         }
 
-        $oqlProduct = Product::find()->andFilterWhere(['is_del'=>Product::DEL_STATE_NO, 'status'=>Product::STATUS_OFF])->all();
+        $oqlProduct = Product::find()->andFilterWhere(['is_del'=>Product::DEL_STATE_NO, 'status'=>Product::STATUS_ON])->all();
         $lsUserProductChannelId = $omUserToPayChannel->getNormalProductToChannelIds($id);
+
         return $this->render('pay-product-allot', [
             'model'         => $omUserToPayChannel,
             'oqUser'        => $oqUser,
             'oqlProduct'    => $oqlProduct,
             'lsUserProduct' => $lsUserProductChannelId,
         ]);
+    }
+
+    /**
+     * 导出excel
+     */
+    public function actionExport()
+    {
+        $lsQueryParam = Yii::$app->request->queryParams;
+
+        header('Content-Type: application/vnd.ms-excel;');
+        $osUser = new UserSearch();
+        $osUser->export($lsQueryParam);
     }
 
     protected function findModel($id)

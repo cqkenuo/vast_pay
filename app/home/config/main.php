@@ -1,10 +1,17 @@
 <?php
 $params = require __DIR__ . '/params.php';
 
+
 return [
     'id' => 'home',
     'basePath' => dirname(__DIR__),
     'controllerNamespace' => 'home\controllers',
+    'as access' => [
+        'class' => 'common\components\AccessControl',
+        'allowActions' => [
+            'site/*',
+        ],
+    ],
     'components' => [
         'user' => [
             'identityClass' => 'common\models\User',
@@ -35,6 +42,13 @@ return [
         'gridview' =>  [
             'class' => '\kartik\grid\Module',
         ],
+
+//        'user' => [
+//            'class' => 'dektrium\user\Module',
+//            'confirmWithin' => 21600,
+//            'cost' => 12,
+//            'admins' => ['admin']
+//        ],
     ],
     'params' => $params,
 

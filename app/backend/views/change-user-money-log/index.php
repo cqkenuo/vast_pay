@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use kartik\grid\GridView;
 use yii\widgets\Pjax;
+use common\helper\Helper;
 use common\models\ChangeUserMoneyLog;
 /* @var $this yii\web\View */
 /* @var $searchModel common\models\ChangeUserMoneyLogSearch */
@@ -12,8 +13,6 @@ $this->title = Yii::t('app', '用户资金日志');
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-<?php Pjax::begin(); ?>
-
 <div class="row">
     <div class="col-xs-12">
         <div class="box">
@@ -22,9 +21,8 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div class="box-body">
                 <div class="box-tools">
+                    <?= Html::a('导出订单excel', ['export',Yii::$app->request->queryParams], ['class' => 'btn btn-primary']) ?>
                 </div>
-
-                <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
                 <?= GridView::widget([
                     'dataProvider' => $dataProvider,
                     'filterModel' => $searchModel,
@@ -32,9 +30,27 @@ $this->params['breadcrumbs'][] = $this->title;
                         ['class' => 'yii\grid\SerialColumn'],
 //                        'id',
                         'user_id',
-                        'change_money',
-                        'before_money',
-                        'after_money',
+                        [
+                            'attribute'=>'change_money',
+                            'value' => function($data) {
+                                return Helper::formatMoney($data->change_money);
+                            },
+                            'filter' => ChangeUserMoneyLog::enumState('type'),
+                        ],
+                        [
+                            'attribute'=>'before_money',
+                            'value' => function($data) {
+                                return Helper::formatMoney($data->before_money);
+                            },
+                            'filter' => ChangeUserMoneyLog::enumState('type'),
+                        ],
+                        [
+                            'attribute'=>'after_money',
+                            'value' => function($data) {
+                                return Helper::formatMoney($data->after_money);
+                            },
+                            'filter' => ChangeUserMoneyLog::enumState('type'),
+                        ],
                         [
                             'attribute'=>'type',
                             'value' => function($data){
@@ -63,4 +79,3 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-<?php Pjax::end(); ?>

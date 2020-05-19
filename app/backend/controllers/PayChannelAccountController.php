@@ -4,13 +4,11 @@ namespace backend\controllers;
 
 use Yii;
 use common\models\PayChannelAccount;
-use common\models\PayChannelAccountSearch;
+use common\models\search\PayChannelAccountSearch;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
-/**
- * PayChannelAccountController implements the CRUD actions for PayChannelAccount model.
- */
+
 class PayChannelAccountController extends BaseController
 {
     /**
@@ -57,8 +55,8 @@ class PayChannelAccountController extends BaseController
     {
         $gPayChannelId = Yii::$app->request->get('pay_channel_id', '');
         $lPost = Yii::$app->request->post();
-        if ($lPost !== []){
-            $lPost['PayChannelAccountSearch']['pay_channel_id'] = $gPayChannelId;
+        if (Yii::$app->request->isPost){
+            $lPost['PayChannelAccount']['pay_channel_id'] = $gPayChannelId;
         }
         $omPayChannelAccount = new PayChannelAccount();
         if ($omPayChannelAccount->load($lPost) && $omPayChannelAccount->save()) {

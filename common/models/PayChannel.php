@@ -2,7 +2,6 @@
 
 namespace common\models;
 
-use Yii;
 use yii\behaviors\TimestampBehavior;
 
 /**
@@ -24,6 +23,8 @@ use yii\behaviors\TimestampBehavior;
 class PayChannel extends \yii\db\ActiveRecord
 {
 
+    const TABLE_NAME = 'pay_channel';
+
     const STATUS_ON = 1;
     const STATUS_OFF = 0;
 
@@ -35,7 +36,7 @@ class PayChannel extends \yii\db\ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%pay_channel}}';
+        return '{{%' . self::TABLE_NAME . '}}';
     }
 
     /**
@@ -64,8 +65,8 @@ class PayChannel extends \yii\db\ActiveRecord
             'product_id' => '产品类型',
             'name' => '通道名称',
             'code' => '通道Code',
-            'profit_rate' => '收取费率(单位:万分之一)',
-            'cost_rate' => '成本费率(单位:万分之一)',
+            'profit_rate' => '收取费率(单位:千分之一)',
+            'cost_rate' => '成本费率(单位:千分之一)',
             'weight' => '权重',
             'request_url' => '请求url',
             'status' => '状态',
@@ -115,7 +116,7 @@ class PayChannel extends \yii\db\ActiveRecord
         ];
 
         if (isset($lsEnum[$type])){
-            return $lsEnum[$type][$field] ? : $lsEnum[$type] ;
+            return $lsEnum[$type][$field] ?? $lsEnum[$type] ;
         }
 
         return $lsEnum;
